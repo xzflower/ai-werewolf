@@ -1,0 +1,417 @@
+/* ═══════════════════════════════════════
+   AI 狼人杀 - 深色青绿主题
+   ═══════════════════════════════════════ */
+
+:root {
+  --bg-primary: #0d1a1a;
+  --bg-secondary: #0f1f1f;
+  --bg-card: #132626;
+  --bg-card-hover: #183030;
+  --bg-overlay: rgba(13, 26, 26, 0.92);
+
+  --accent: #14b8a6;
+  --accent-light: #2dd4bf;
+  --accent-dim: #0d9488;
+
+  --gold: #f59e0b;
+  --gold-light: #fbbf24;
+  --gold-dim: #d97706;
+
+  --good-green: #10b981;
+  --evil-red: #ef4444;
+  --neutral: #94a3b8;
+
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-dim: #64748b;
+
+  --border: #1a3a3a;
+  --border-light: #1e4a4a;
+
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  --font-mono: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── 布局 ── */
+
+.app-container {
+  display: grid;
+  grid-template-columns: 300px 1fr 320px;
+  grid-template-rows: 60px 1fr;
+  height: 100vh;
+  overflow: hidden;
+  gap: 1px;
+  background: var(--border);
+}
+
+.app-header {
+  grid-column: 1 / -1;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.app-header h1 span {
+  color: var(--gold);
+}
+
+.phase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+}
+
+.phase-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.phase-dot.night { background: #6366f1; }
+.phase-dot.day { background: var(--gold); }
+.phase-dot.vote { background: var(--accent); }
+
+/* ── 侧边栏：玩家列表 ── */
+
+.sidebar-left {
+  background: var(--bg-secondary);
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+  cursor: default;
+}
+
+.player-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-light);
+}
+
+.player-card.dead {
+  opacity: 0.4;
+}
+
+.player-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-role {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.player-role.revealed {
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.player-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.status-alive {
+  color: var(--good-green);
+}
+.status-dead {
+  color: var(--evil-red);
+}
+
+/* ── 主区域：事件流 ── */
+
+.main-area {
+  background: var(--bg-primary);
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.event-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-entry {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border-left: 3px solid var(--accent-dim);
+  animation: fadeIn 0.3s ease;
+}
+
+.event-entry.speech {
+  border-left-color: var(--accent);
+}
+
+.event-entry.night {
+  border-left-color: #6366f1;
+}
+
+.event-entry.vote {
+  border-left-color: var(--gold);
+}
+
+.event-entry.death {
+  border-left-color: var(--evil-red);
+}
+
+.event-entry.game-over {
+  border-left-color: var(--gold);
+  background: linear-gradient(135deg, var(--bg-card), #1a2a1a);
+}
+
+.event-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.event-content {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.event-content .inner-mono {
+  display: block;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+  font-size: 12px;
+  font-style: italic;
+  font-family: var(--font-mono);
+}
+
+/* ── 右侧面板 ── */
+
+.sidebar-right {
+  background: var(--bg-secondary);
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.panel-section {
+  margin-bottom: 16px;
+}
+
+.panel-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* 投票展示 */
+.vote-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.vote-bar .voter-label {
+  width: 70px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.vote-bar .vote-fill {
+  height: 20px;
+  border-radius: 3px;
+  min-width: 2px;
+  transition: width 0.3s;
+}
+
+/* 阶段统计 */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.stat-label {
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+/* ── 开始界面 ── */
+
+.start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 24px;
+}
+
+.start-screen .logo {
+  font-size: 64px;
+}
+
+.start-screen h2 {
+  font-size: 24px;
+  color: var(--accent);
+}
+
+.start-btn {
+  padding: 14px 48px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent-dim), var(--accent));
+  color: white;
+  transition: all 0.2s;
+  box-shadow: var(--shadow);
+}
+
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(20, 184, 166, 0.3);
+}
+
+.start-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Game Over ── */
+
+.game-over-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-overlay);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 100;
+  animation: fadeIn 0.5s ease;
+}
+
+.game-over-overlay .result-icon {
+  font-size: 80px;
+}
+
+.game-over-overlay .result-text {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.game-over-overlay .result-text.wolf {
+  color: var(--evil-red);
+}
+
+.game-over-overlay .result-text.villager {
+  color: var(--accent);
+}
+
+/* ── 动画 ── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 滚动条 ── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-dim);
+}

@@ -1,0 +1,23 @@
+Fix two files in the AI Werewolf game for memory management.
+
+### Fix 1: backend/agent/memory.py
+
+1. Change set_private_info to merge instead of overwrite:
+   def set_private_info(self, info: dict) -> None:
+       self.private_info.update(info)
+
+2. Add get_condensed_history(max_entries=100) -> str method:
+   - If speech_history length < 20, return full history
+   - If long, summarize: earlier rounds summarized, recent rounds kept verbatim
+   - Return a condensed text summary in Chinese
+
+3. Add summarize_key_events(elimination_history=None) -> str:
+   - Summarizes who died, when
+   - Returns concise bullet list in Chinese
+
+### Fix 2: backend/agent/base.py
+
+1. In reflect(), after LLM response, call memory.update_belief() to record beliefs about other players by parsing the LLM analysis section for player IDs mentioned
+2. In speak(), after calling reflect(), save the inner monologue via memory.set_private_info({'last_inner_monologue': result.inner_monologue})
+
+After creating, verify with: python3 -c "from backend.agent.memory import AgentMemory; m=AgentMemory(); m.set_private_info({'a':1}); m.set_private_info({'b':2}); d=m.get_private_info(); print('Merge OK:', d.get('a')==1 and d.get('b')==2)"
