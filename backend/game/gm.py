@@ -4,6 +4,7 @@ import random
 from collections import Counter
 from typing import Optional
 
+from backend.db import save_game
 from backend.game.models import (
     Camp,
     GameConfig,
@@ -98,6 +99,23 @@ class GameMaster:
             self.state.night_kill_target = None
             self.state.night_saved = False
             self.state.night_poison_target = None
+
+        # ── 游戏结束：持久化到数据库 ──
+        try:
+            roles_data = [
+                {"id": p.id, "name": p.name, "role": p.role.value, "camp": p.camp.value}
+                for p in self.state.players
+            ]
+            save_game(
+                winner=self.state.winner.value if self.state.winner else "unknown",
+                total_rounds=self.state.round,
+                roles=roles_data,
+                elimination_history=self.state.elimination_history,
+                events=self.event_queue,
+            )
+        except Exception:
+            import traceback
+            traceback.print_exc()
 
     # ------------------------------------------------------------------
     # Night phases
